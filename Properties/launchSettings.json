@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CNG462_A1 - Csharp": {
+      "commandName": "Project",
+      "commandLineArgs": "solvetsp map.txt"
+    }
+  }
+}
