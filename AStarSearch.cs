@@ -6,6 +6,54 @@ namespace CNG462_A1___Csharp
 {
     class AStarSearch
     {
+        class PriorityQueue<TEntry> where TEntry : Node
+        {
+            public LinkedList<TEntry> Entries { get; } = new LinkedList<TEntry>();
+
+            public int Count()
+            {
+                return Entries.Count;
+            }
+
+            public TEntry Dequeue()
+            {
+                if (Entries.Any())
+                {
+                    TEntry ItemTobeRemoved = Entries.First.Value;
+                    Entries.RemoveFirst();
+                    return ItemTobeRemoved;
+                }
+
+                return default;
+            }
+
+            public void Enqueue(TEntry Entry)
+            {
+                LinkedListNode<TEntry> Value = new LinkedListNode<TEntry>(Entry);
+                if (Entries.First == null)
+                {
+                    Entries.AddFirst(Value);
+                }
+                else
+                {
+                    LinkedListNode<TEntry> ptr = Entries.First;
+                    while (ptr.Next != null && ptr.Value.f < Entry.f)
+                    {
+                        ptr = ptr.Next;
+                    }
+
+                    if (ptr.Value.f <= Entry.f)
+                    {
+                        Entries.AddAfter(ptr, Value);
+                    }
+                    else
+                    {
+                        Entries.AddBefore(ptr, Value);
+                    }
+                }
+            }
+        }
+
         class Node
         {
             public Node Parent;
@@ -33,8 +81,7 @@ namespace CNG462_A1___Csharp
             }
         }
 
-        List<Node> OpenList;
-        List<Node> ClosedList;
+        PriorityQueue<Node> MainQueue;
         readonly Dictionary<string, Tuple<int, int>> AvailableDirectionToGo;
         readonly Dictionary<string, Tuple<int, int>> PositionOfPoints;
         readonly char[][] mainArray;
@@ -43,8 +90,7 @@ namespace CNG462_A1___Csharp
 
         public AStarSearch(string Start, string Destination, char[][] mainArray, Dictionary<string, Tuple<int, int>> PositionOfPoints)
         {
-            OpenList = new List<Node>();
-            ClosedList = new List<Node>();
+            this.MainQueue = new PriorityQueue<Node>();
 
             AvailableDirectionToGo = new Dictionary<string, Tuple<int, int>>
             {
@@ -58,21 +104,6 @@ namespace CNG462_A1___Csharp
             this.PositionOfPoints = PositionOfPoints;
             this.Start = Start;
             this.Destination = Destination;
-        }
-
-        private Node FindNodeWithMinimumF()
-        {
-            Node MinF = OpenList.First();
-
-            foreach (Node TheNode in OpenList)
-            {
-                if (MinF.f > TheNode.f)
-                    MinF = TheNode;
-            }
-
-            OpenList.Remove(MinF);
-            return MinF;
-
         }
 
         private static int GetManhattanDistance(Tuple<int, int> Position1, Tuple<int, int> Position2)
@@ -106,11 +137,11 @@ namespace CNG462_A1___Csharp
             var StartingNode = new Node(Start, PositionOfPoints[Start],
                 h: GetManhattanDistance(PositionOfPoints[Start], PositionOfPoints[Destination]));
 
-            OpenList.Add(StartingNode);
+            MainQueue.Enqueue(StartingNode);
 
-            while (OpenList.Any())
+            while (MainQueue.Count() != 0)
             {
-                Node Q = FindNodeWithMinimumF();
+                Node Q = MainQueue.Dequeue();
                 GenerateSuccessors(Q);
 
                 foreach (Node Successor in Q.Childs)
@@ -128,34 +159,9 @@ namespace CNG462_A1___Csharp
 
                         return Distance;
                     }
-                        
 
-                    bool SkipThisSuccessor = false;
-
-                    foreach (Node OpenNode in OpenList)
-                        if ((OpenNode.NodeName == Successor.NodeName) && (OpenNode.f < Successor.f))
-                        {
-                            SkipThisSuccessor = true;
-                            break;
-                        }
-
-                    if (SkipThisSuccessor)
-                        continue;
-
-                    foreach (Node ClosedNode in ClosedList)
-                        if ((ClosedNode.NodeName == Successor.NodeName) && (ClosedNode.f < Successor.f))
-                        {
-                            SkipThisSuccessor = true;
-                            break;
-                        }
-
-                    if (SkipThisSuccessor)
-                        continue;
-
-                    OpenList.Add(Successor);
+                    MainQueue.Enqueue(Successor);
                 }
-
-                ClosedList.Add(Q);
             }
 
             return -1; //error
