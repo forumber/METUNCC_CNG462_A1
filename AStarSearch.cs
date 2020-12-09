@@ -6,6 +6,7 @@ namespace CNG462_A1___Csharp
 {
     class AStarSearch
     {
+        // Got and modified from https://medium.com/@basilin/priority-queue-with-c-7089f4898c8d
         class PriorityQueue<TEntry> where TEntry : Node
         {
             public LinkedList<TEntry> Entries { get; } = new LinkedList<TEntry>();
